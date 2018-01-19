@@ -1,0 +1,12 @@
+{
+  "name": "crawler_meta_data_and_apks",
+  "version": "0.0.1",
+  "dependencies": {
+    "amqplib": "0.5.2",
+    "config": "^1.29.2",
+    "gpapi": "^4.0.0",
+    "google-play-cli": "^4.5.0",
+    "shelljs": "0.8.0",
+    "mongodb": "^2.2.33"
+  }
+}

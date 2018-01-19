@@ -1,0 +1,14 @@
+{
+	"taskQueueName": "task_queue",
+	"failureQueueName": "failed_ids",
+	
+	"apkTaskQueueName": "apk_task_queue",
+	"apkFailureQueueName": "apk_failed_ids",
+
+	"rabbitMQurl": "amqp://localhost",
+	"mongoDBurl": "mongodb://localhost:27017/gapi",
+	"mongoCollectionName": "app_details_test",
+
+	"filePathToAppIds": "/Users/lakshmanan/Desktop/Repositories/crawler_info/list.txt",
+	"filePathToStoreAPKs": ""
+}

@@ -1,0 +1,104 @@
+var gplay = require('gpapi');
+var MongoClient = require('mongodb').MongoClient;
+var amqp = require('amqplib');
+var config = require('config')
+
+var mongoDBurl = config.get('mongoDBurl')
+var collectionName = config.get('mongoCollectionName')
+var rabbitMQurl = config.get('rabbitMQurl')
+var taskQueue = config.get('taskQueueName')
+var apkTaskQueue = config.get('apkTaskQueueName')
+var failureQueue = config.get('failureQueueName')
+
+
+//Replace the dbname(gapi) here
+MongoClient.connect(mongoDBurl, function(err, db) {
+	if(!err) {
+		console.log("MongoClient connected");
+		var collection = db.collection(collectionName);
+
+		amqp.connect(rabbitMQurl).then(function(conn) {
+			process.once('SIGINT', function() { conn.close(); });
+			return conn.createChannel().then(function(ch) {
+				var ok = ch.assertQueue(taskQueue, {durable: true});
+
+				ok = ok.then(function() { ch.prefetch(1); });
+				ok = ok.then(function() {
+					ch.consume(taskQueue, doWork, {noAck: false});
+					console.log(" [*] Waiting for messages. To exit press CTRL+C");
+				});
+				return ok;
+
+				function doWork(msg) {
+					var body = msg.content.toString();
+					console.log(" [x] Received '%s'", body);
+
+					var usernames = ['scrawler16.1@gmail.com', 'scrawler16.9@gmail.com', 'scrawler16.8@gmail.com', 'scrawler16.7@gmail.com', 'scrawler16.6@gmail.com', 'scrawler16.2@gmail.com', 'scrawler16.3@gmail.com', 'scrawler16.4@gmail.com']
+					var index = Math.floor(Math.random() * usernames.length)
+
+					console.log('Requesting from:' + usernames[index]);
+
+					var api = gplay.GooglePlayAPI({
+						username: usernames[index],
+						password: "softwarearchitecturegroup",
+						androidId: "3fddcb51d78c34da"
+						// apiUserAgent: optional API agent override (see below)
+						// downloadUserAgent: optional download agent override (see below)
+					});
+
+					api.details(body).then((data) => {
+						var json = JSON.stringify(data);
+	        	json = JSON.parse(json);
+
+	        	//Update metadata if already exists in db otherwise insert
+	        	collection.find({ docid: body }).toArray(function(err, results) {
+							if(results.length > 0) {
+								var result = results[results.length - 1]
+
+								//logic to update only if versionCode is large
+								if (json.details.appDetails.versionCode != result.details.appDetails.versionCode) {
+									enqueueToAPK(body);
+								
+									collection.insert(json, function(err, result){
+								    if (!err)	console.log("inserted:" + body);
+								    else console.log("failed:" + body);
+
+								    acknowledgeToQ(msg, 4000, " [x] Done");
+									});
+								} else acknowledgeToQ(msg, 4000, " [x] Done");
+							}
+							else {
+								collection.insert(json, function(err, result){
+							    if (!err) {
+							    	console.log("inserted:" + body);
+							    	enqueueToAPK(body);
+							    }
+							    else console.log("failed:" + body);
+
+							    acknowledgeToQ(msg, 4000, " [x] Done");
+								});
+							}
+						});
+					}).catch((err) => {
+						var not_ok = ch.assertQueue(failureQueue, {durable: true});
+						ch.sendToQueue(failureQueue, Buffer.from(body), {deliveryMode: true});
+						console.log(" [y] Sent '%s'", body);
+						acknowledgeToQ(msg, 4200, " [y] Failed");
+					}); //end api details
+				} //end doWork()
+
+				function acknowledgeToQ(msg, time, log) {
+					setTimeout(function() {
+						console.log(log);
+						ch.ack(msg); //Acknowledgement sent to the Queue to pick up the next one
+					}, time);
+				}
+
+				function enqueueToAPK(body) {
+					var apk = ch.assertQueue(apkTaskQueue, {durable: true});
+					ch.sendToQueue(apkTaskQueue, Buffer.from(body), {deliveryMode: true});
+				}
+			}); //channel code end
+		}).catch(console.warn); //end amqp 
+	} //end-if
+}); //end MongoDB conn
