@@ -5,17 +5,21 @@ var config = require('config')
 
 var mongoDBurl = config.get('mongoDBurl')
 var collectionName = config.get('mongoCollectionName')
+var reviewCollectionName = config.get('reviewCollectionName')
+
 var rabbitMQurl = config.get('rabbitMQurl')
 var taskQueue = config.get('taskQueueName')
 var apkTaskQueue = config.get('apkTaskQueueName')
 var failureQueue = config.get('failureQueueName')
+var reviewQueue = config.get('reviewQueueName')
+var reviews10KQueue = config.get('reviews10KQueueName')
 
 
-//Replace the dbname(gapi) here
 MongoClient.connect(mongoDBurl, function(err, db) {
 	if(!err) {
 		console.log("MongoClient connected");
 		var collection = db.collection(collectionName);
+		var reviewCollection = db.collection(reviewCollectionName);
 
 		amqp.connect(rabbitMQurl).then(function(conn) {
 			process.once('SIGINT', function() { conn.close(); });
@@ -49,11 +53,13 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 					api.details(body).then((data) => {
 						var json = JSON.stringify(data);
 	        	json = JSON.parse(json);
+	        	// console.log(json);
 
 	        	//Update metadata if already exists in db otherwise insert
 	        	collection.find({ docid: body }).toArray(function(err, results) {
 							if(results.length > 0) {
-								var result = results[results.length - 1]
+								var result = results[results.length - 1] //latest(last inserted) document version
+								enqueueToReview(json);
 
 								//logic to update only if versionCode is large
 								if (json.details.appDetails.versionCode != result.details.appDetails.versionCode) {
@@ -72,6 +78,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 							    if (!err) {
 							    	console.log("inserted:" + body);
 							    	enqueueToAPK(body);
+							    	enqueueToReview(json);
 							    }
 							    else console.log("failed:" + body);
 
@@ -96,7 +103,42 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 
 				function enqueueToAPK(body) {
 					var apk = ch.assertQueue(apkTaskQueue, {durable: true});
-					ch.sendToQueue(apkTaskQueue, Buffer.from(body), {deliveryMode: true});
+					return apk.then(function() {
+						ch.sendToQueue(apkTaskQueue, Buffer.from(body), {deliveryMode: true});
+					});
+				}
+
+				function enqueueToReview(doc) {
+      		// console.log(doc);
+					var reviews = ch.assertQueue(reviewQueue, {durable: true});
+					ch.assertQueue(reviews10KQueue, {durable: true});
+
+					return reviews.then(function() {
+						reviewCollection.findOne({ docid: doc.docid }, function(err, result) {
+						  var newCommentsCount = doc.aggregateRating.commentCount.low;
+						  console.log('Enq to review,')
+						  console.log(newCommentsCount)
+						  if(result != null) {
+						  	var oldCommentsCount = result.aggregateRating.commentCount.low;
+						  	console.log(oldCommentsCount)
+						  	if(newCommentsCount > oldCommentsCount) {
+						  		newCommentsCount = newCommentsCount - oldCommentsCount;
+						  	}
+						  }
+
+						  var pushToQueue = reviewQueue;
+						  if(newCommentsCount > 10000) {
+						  	pushToQueue = reviews10KQueue;
+						  }
+
+						  var pages = Math.ceil( newCommentsCount / 40)
+							for(var i=0; i < pages; i++) {
+							  var obj = { docid: doc.docid, page: i, totalComments: doc.aggregateRating.commentCount.low };
+							  ch.sendToQueue(pushToQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true});
+							  console.log(" [a] Sent '%s'", doc.docid);
+							}
+						});
+					});
 				}
 			}); //channel code end
 		}).catch(console.warn); //end amqp 
