@@ -7,6 +7,7 @@ var config = require('config');
 var rabbitMQurl = config.get('rabbitMQurl')
 var apkTaskQueue = config.get('apkTaskQueueName')
 var apkFailureQueue = config.get('apkFailureQueueName')
+var filePath = config.get('filePathToStoreAPKs')
 
 process.env.GOOGLE_PASSWORD = "softwarearchitecturegroup"
 process.env.ANDROID_ID = "3fddcb51d78c34da"
@@ -27,7 +28,7 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 			console.log(" [x] Received '%s'", body);
 			var secs = body.split('.').length - 1;
 
-			var filepath = "" + body + ".apk"
+			var filepath = filePath + body + ".apk"
 
 			var usernames = ['scrawler16.1@gmail.com', 'scrawler16.9@gmail.com', 'scrawler16.8@gmail.com', 'scrawler16.7@gmail.com', 'scrawler16.6@gmail.com', 'scrawler16.2@gmail.com', 'scrawler16.3@gmail.com', 'scrawler16.4@gmail.com']
 			var index = Math.floor(Math.random() * usernames.length)
