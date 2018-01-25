@@ -143,4 +143,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 			}); //channel code end
 		}).catch(console.warn); //end amqp 
 	} //end-if
+	else {
+		console.log(err);
+	}
 }); //end MongoDB conn
