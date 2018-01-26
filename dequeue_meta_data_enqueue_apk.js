@@ -63,7 +63,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 
 								//logic to update only if versionCode is large
 								if (json.details.appDetails.versionCode != result.details.appDetails.versionCode) {
-									enqueueToAPK(body);
+									enqueueToAPK(body, json.details.appDetails.versionCode);
 								
 									collection.insert(json, function(err, result){
 								    if (!err)	console.log("inserted:" + body);
@@ -77,7 +77,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 								collection.insert(json, function(err, result){
 							    if (!err) {
 							    	console.log("inserted:" + body);
-							    	enqueueToAPK(body);
+							    	enqueueToAPK(body, json.details.appDetails.versionCode);
 							    	enqueueToReview(json);
 							    }
 							    else console.log("failed:" + body);
@@ -101,10 +101,11 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 					}, time);
 				}
 
-				function enqueueToAPK(body) {
+				function enqueueToAPK(body, versionCode) {
 					var apk = ch.assertQueue(apkTaskQueue, {durable: true});
+					var obj = { docid: body, versionCode: versionCode };
 					return apk.then(function() {
-						ch.sendToQueue(apkTaskQueue, Buffer.from(body), {deliveryMode: true});
+						ch.sendToQueue(apkTaskQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true});
 					});
 				}
 
@@ -119,7 +120,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 						  console.log('Enq to review,')
 						  console.log(newCommentsCount)
 						  if(result != null) {
-						  	var oldCommentsCount = result.aggregateRating.commentCount.low;
+						  	var oldCommentsCount = result.totalComments;
 						  	console.log(oldCommentsCount)
 						  	if(newCommentsCount > oldCommentsCount) {
 						  		newCommentsCount = newCommentsCount - oldCommentsCount;

@@ -24,11 +24,16 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 		return ok;
 
 		function doWork(msg) {
-			var body = msg.content.toString();
+			var doc = JSON.parse(msg.content.toString());
+			var body = doc.docid;
+			var version = "0";
+
+			if(doc.versionCode != null) version = doc.versionCode;
+
 			console.log(" [x] Received '%s'", body);
 			var secs = body.split('.').length - 1;
 
-			var filepath = filePath + body + ".apk"
+			var filepath = filePath + body + "_"+ version +".apk"
 
 			var usernames = ['scrawler16.1@gmail.com', 'scrawler16.9@gmail.com', 'scrawler16.8@gmail.com', 'scrawler16.7@gmail.com', 'scrawler16.6@gmail.com', 'scrawler16.2@gmail.com', 'scrawler16.3@gmail.com', 'scrawler16.4@gmail.com']
 			var index = Math.floor(Math.random() * usernames.length)
