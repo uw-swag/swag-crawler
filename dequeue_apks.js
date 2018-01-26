@@ -11,8 +11,8 @@ var apkTaskQueue = config.get('apkTaskQueueName')
 var apkFailureQueue = config.get('apkFailureQueueName')
 var filePath = config.get('filePathToStoreAPKs')
 
-process.env.GOOGLE_PASSWORD = "softwarearchitecturegroup"
-process.env.ANDROID_ID = "3fddcb51d78c34da"
+process.env.GOOGLE_PASSWORD = config.get('googlePassword')
+process.env.ANDROID_ID = config.get('androidID')
 
 amqp.connect(rabbitMQurl).then(function(conn) {
 	process.once('SIGINT', function() { conn.close(); });
@@ -37,7 +37,7 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 
 			var filepath = filePath + body + "_"+ version +".apk"
 
-			var usernames = ['scrawler16.1@gmail.com', 'scrawler16.9@gmail.com', 'scrawler16.8@gmail.com', 'scrawler16.7@gmail.com', 'scrawler16.6@gmail.com', 'scrawler16.2@gmail.com', 'scrawler16.3@gmail.com', 'scrawler16.4@gmail.com']
+			var usernames = config.get('usernames')
 			var index = Math.floor(Math.random() * usernames.length)
 
 			process.env.GOOGLE_LOGIN = usernames[index]

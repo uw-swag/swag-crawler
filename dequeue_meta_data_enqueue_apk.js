@@ -37,7 +37,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 					var body = msg.content.toString();
 					console.log(" [x] Received '%s'", body);
 
-					var usernames = ['scrawler16.1@gmail.com', 'scrawler16.9@gmail.com', 'scrawler16.8@gmail.com', 'scrawler16.7@gmail.com', 'scrawler16.6@gmail.com', 'scrawler16.2@gmail.com', 'scrawler16.3@gmail.com', 'scrawler16.4@gmail.com']
+					var usernames = config.get('usernames');
 					var index = Math.floor(Math.random() * usernames.length)
 
 					console.log('Requesting from:' + usernames[index]);
