@@ -3,3 +3,7 @@
 
 # Dependencies
 node_modules/
+config/.DS_Store
+.DS_Store
+.gitignore
+package-lock.json
