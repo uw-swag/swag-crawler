@@ -1,0 +1,12 @@
+[Unit]
+Description=Node.js APK file downloader from RabbitMQ queue
+[Service]
+PIDFile=/tmp/dequeue_apks.pid
+User=<Your Username>
+Group=<Your User Group>
+Restart=always
+KillSignal=SIGQUIT
+WorkingDirectory=/home/<username>/hello_world/
+ExecStart=/home/<username>/hello_world/dequeue_apks.js
+[Install]
+WantedBy=multi-user.target
