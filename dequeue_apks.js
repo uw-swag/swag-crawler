@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 var gplay = require('gpapi');
 var MongoClient = require('mongodb').MongoClient;
 var amqp = require('amqplib');
