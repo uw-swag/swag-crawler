@@ -3,13 +3,16 @@
 var gplay = require('gpapi');
 var MongoClient = require('mongodb').MongoClient;
 var amqp = require('amqplib');
+var shell = require('shelljs');
 var config = require('config');
-var fs = require("fs");
 
 var rabbitMQurl = config.get('rabbitMQurl')
 var apkTaskQueue = config.get('apkTaskQueueName')
 var apkFailureQueue = config.get('apkFailureQueueName')
 var filePath = config.get('filePathToStoreAPKs')
+
+process.env.GOOGLE_PASSWORD = config.get('googlePassword')
+process.env.ANDROID_ID = config.get('androidID')
 
 amqp.connect(rabbitMQurl).then(function(conn) {
 	process.once('SIGINT', function() { conn.close(); });
@@ -23,7 +26,6 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 		return ok;
 
 		function doWork(msg) {
-			console.log(msg);
 			var doc = JSON.parse(msg.content.toString());
 			var body = doc.docid;
 			var version = "0";
@@ -31,49 +33,32 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 			if(doc.versionCode != null) version = doc.versionCode;
 
 			console.log(" [x] Received '%s'", body);
+			var secs = body.split('.').length - 1;
 
 			var filepath = filePath + body + "_"+ version +".apk"
-			var myFile = fs.createWriteStream(filepath);
 
 			var usernames = config.get('usernames')
 			var index = Math.floor(Math.random() * usernames.length)
-			var api = gplay.GooglePlayAPI({
-				username: usernames[index],
-				password: config.get('googlePassword'),
-				androidId: config.get('androidID')
-				// apiUserAgent: optional API agent override (see below)
-				// downloadUserAgent: optional download agent override (see below)
-			});
 
-			api.download(body, doc.versionCode).then(function (res) {
-				console.log("Starting:"+ body);
-				res.pipe(myFile);
+			process.env.GOOGLE_LOGIN = usernames[index]
 
-				res.on('end', () => {
-					console.log("finished:" + body);
-					ch.ack(msg);
-					myFile.end();
-				});
+			console.log('Requesting from:' + process.env.GOOGLE_LOGIN);
 
-				res.on('error', () => {
-					console.log("Error downloading:" + body);
-					errHandle(body, doc.versionCode);
-					myFile.end();
-				});
-			}, function (err) {
-			  console.error(err.toString());
-			  errHandle(body, doc.versionCode);
-			});
+			var cmd ="gp-download "+ body +" > "+ filepath
 
-			function errHandle(body, versionCode) {
+			shell.exec(cmd, function(data) {
+				console.log(data);
+				console.log('Downloaded:' + body);
+				ch.ack(msg);
+			}, function(err) {
+				console.log(err);
 				var not_ok = ch.assertQueue(apkFailureQueue, {durable: true});
-				var obj = { docid: body, versionCode: versionCode };
-				ch.sendToQueue(apkFailureQueue, Buffer.from(obj), {deliveryMode: true});
+				ch.sendToQueue(apkFailureQueue, Buffer.from(body), {deliveryMode: true});
 				console.log('Failed:' + body);
 				setTimeout(function(argument) {
 					ch.ack(msg); //Acknowledgement sent to the Queue to pick up the next one
-				}, 3000);
-			}
+				}, 1000);
+			});
 		}
 	}); //channel code end
 }).catch(console.warn); //end amqp 

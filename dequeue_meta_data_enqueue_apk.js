@@ -46,8 +46,8 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 
 					var api = gplay.GooglePlayAPI({
 						username: usernames[index],
-						password: "softwarearchitecturegroup",
-						androidId: "3fddcb51d78c34da"
+						password: config.get('googlePassword'),
+						androidId: config.get('androidID')
 						// apiUserAgent: optional API agent override (see below)
 						// downloadUserAgent: optional download agent override (see below)
 					});
