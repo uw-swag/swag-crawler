@@ -33,7 +33,6 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 			console.log(" [x] Received '%s'", body);
 
 			var filepath = filePath + body + "_"+ version +".apk"
-			var myFile = fs.createWriteStream(filepath);
 
 			var usernames = config.get('usernames')
 			var index = Math.floor(Math.random() * usernames.length)
@@ -46,6 +45,7 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 			});
 
 			api.download(body, doc.versionCode).then(function (res) {
+				var myFile = fs.createWriteStream(filepath);
 				console.log("Starting:"+ body);
 				res.pipe(myFile);
 
