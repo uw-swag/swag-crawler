@@ -8,3 +8,4 @@ config/.DS_Store
 .gitignore
 package-lock.json
 *.apk
+*.txt
