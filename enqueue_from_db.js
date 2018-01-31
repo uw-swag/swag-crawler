@@ -18,6 +18,8 @@ var collectionName = config.get('mongoCollectionName')
 var contents = fs.readFileSync(filepath, 'utf8');
 var ids = contents.split("\n");
 
+console.log("Queing to: " + taskQueue);
+
 MongoClient.connect(mongoDBurl, function(err, db) {
   if(!err) {
     console.log("MongoClient connected");

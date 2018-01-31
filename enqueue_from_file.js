@@ -11,7 +11,8 @@ var config = require('config')
 var filepath = config.get('filePathToAppIds')
 var rabbitMQurl = config.get('rabbitMQurl')
 var taskQueue = config.get('taskQueueName')
-// var apkTaskQueue = config.get('apkTaskQueueName')
+
+console.log("Queing to: " + taskQueue);
 
 var contents = fs.readFileSync(filepath, 'utf8');
 var ids = contents.split("\n");

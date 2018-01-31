@@ -23,7 +23,7 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 		return ok;
 
 		function doWork(msg) {
-			console.log(msg);
+			// console.log(msg);
 			var doc = JSON.parse(msg.content.toString());
 			var body = doc.docid;
 			var version = "0";
@@ -44,35 +44,54 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 				// downloadUserAgent: optional download agent override (see below)
 			});
 
-			api.download(body, doc.versionCode).then(function (res) {
-				var myFile = fs.createWriteStream(filepath);
-				console.log("Starting:"+ body);
-				res.pipe(myFile);
+			fs.exists(filepath, (exists) => {
+				if(!exists) {
+					console.log("New APK!");
 
-				res.on('end', () => {
-					console.log("finished:" + body);
-					ch.ack(msg);
-					myFile.end();
-				});
+					//requesting google play for apk
+					api.download(body, doc.versionCode).then(function (res) {
+						var myFile = fs.createWriteStream(filepath);
+						console.log("Starting: "+ body);
 
-				res.on('error', () => {
-					console.log("Error downloading:" + body);
-					errHandle(body, doc.versionCode);
-					myFile.end();
-				});
-			}, function (err) {
-			  console.error(err.toString());
-			  errHandle(body, doc.versionCode);
+						//write the response to apk file
+						res.pipe(myFile);
+
+						res.on('end', () => {
+							acknowledgeToQ(msg, 1000, "Finished downloading: " + body);
+							myFile.end();
+						});
+
+						//error when writing to the apk file
+						res.on('error', () => {
+							console.log("Error downloading: " + body);
+
+							myFile.end(function() {
+								fs.unlinkSync(filepath); //delete created file if any error occurs in the middle of download
+							});
+							errHandle(body, doc.versionCode);
+						});
+					}, function (err) { //handle error that occurs while requesting for apk file
+					  console.error(err.toString());
+					  errHandle(body, doc.versionCode);
+					});
+				} else {
+					var log = "APK for " + body + "_"+ doc.versionCode + " exists already, skipping download";
+					acknowledgeToQ(msg, 0, log);
+				}
 			});
+
+			function acknowledgeToQ(msg, time, log) {
+				setTimeout(function() {
+					console.log(log);
+					ch.ack(msg); //Acknowledgement sent to the Queue to pick up the next one
+				}, time);
+			}
 
 			function errHandle(body, versionCode) {
 				var not_ok = ch.assertQueue(apkFailureQueue, {durable: true});
 				var obj = { docid: body, versionCode: versionCode };
-				ch.sendToQueue(apkFailureQueue, Buffer.from(obj), {deliveryMode: true});
-				console.log('Failed:' + body);
-				setTimeout(function(argument) {
-					ch.ack(msg); //Acknowledgement sent to the Queue to pick up the next one
-				}, 3000);
+				ch.sendToQueue(apkFailureQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true});
+				acknowledgeToQ(msg, 3500, "Failed: " + body);
 			}
 		}
 	}); //channel code end
