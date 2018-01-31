@@ -2,21 +2,16 @@
  * Created by lakshmanan on 12/01/18.
  */
 
-var fs = require('fs')
 var amqp = require('amqplib')
 var config = require('config')
 var MongoClient = require('mongodb').MongoClient
 
 /* file reading */
 
-var filepath = config.get('filePathToAppIds')
 var rabbitMQurl = config.get('rabbitMQurl')
 var taskQueue = config.get('taskQueueName')
 var mongoDBurl = config.get('mongoDBurl')
 var collectionName = config.get('mongoCollectionName')
-
-var contents = fs.readFileSync(filepath, 'utf8');
-var ids = contents.split("\n");
 
 console.log("Queing to: " + taskQueue);
 
