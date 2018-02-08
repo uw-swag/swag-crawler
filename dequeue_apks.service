@@ -6,7 +6,7 @@ User=<Your Username>
 Group=<Your User Group>
 Restart=always
 KillSignal=SIGQUIT
-WorkingDirectory=/home/<username>/hello_world/
-ExecStart=/home/<username>/hello_world/dequeue_apks.js
+WorkingDirectory=/home/<username>/swag-crawler/
+ExecStart=/home/<username>/swag-crawler/dequeue_apks.js
 [Install]
 WantedBy=multi-user.target
