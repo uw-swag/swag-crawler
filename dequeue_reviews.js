@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 var gplay = require('google-play-scraper');
 var MongoClient = require('mongodb').MongoClient;
 var amqp = require('amqplib');
