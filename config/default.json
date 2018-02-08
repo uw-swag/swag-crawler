@@ -14,13 +14,13 @@
 	"rabbitMQurl": "amqp://localhost",
 
 	"mongoDBurl": "mongodb://localhost:27017/gapi",
-	"mongoCollectionName": "app_details_test",
+	"mongoCollectionName": "app_details",
 	"reviewCollectionName": "app_reviews",
 
-	"filePathToAppIds": "/Users/lakshmanan/Desktop/Repositories/crawler_info/list.txt",
-	"filePathToStoreAPKs": "",
+	"filePathToAppIds": "/swag-crawler/list.txt",
+	"filePathToStoreAPKs": "/path/to/storage/",
 
 	"usernames" : ["scrawler16.1@gmail.com", "scrawler16.9@gmail.com", "scrawler16.8@gmail.com", "scrawler16.7@gmail.com", "scrawler16.6@gmail.com", "scrawler16.2@gmail.com", "scrawler16.3@gmail.com", "scrawler16.4@gmail.com"],
-	"googlePassword": "softwarearchitecturegroup",
+	"googlePassword": "",
 	"androidID": "3fddcb51d78c34da"
 }
