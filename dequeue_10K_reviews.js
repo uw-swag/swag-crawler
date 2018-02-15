@@ -66,8 +66,8 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 						} else { acknowledgeToQ(msg, 4000, " [x] Done"); }
 					}).catch((err) => {
 						var not_ok = ch.assertQueue(failureQueue, {durable: true});
-						var obj = { docid: doc.docid, page: doc.page, totalComments: doc.aggregateRating.commentCount.low };
-					  ch.sendToQueue(failureQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true});
+						// var obj = { docid: doc.docid, page: doc.page, totalComments: doc.aggregateRating.commentCount.low };
+					  ch.sendToQueue(failureQueue, Buffer.from(JSON.stringify(doc)), {deliveryMode: true});
 
 						console.log(" [y] Sent '%s'", doc.docid);
 						acknowledgeToQ(msg, 4200, " [y] Failed");

@@ -57,7 +57,7 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 						res.pipe(myFile);
 
 						res.on('end', () => {
-							acknowledgeToQ(msg, 1000, "Finished downloading: " + body);
+							acknowledgeToQ(msg, 2000, "Finished downloading: " + body);
 							myFile.end();
 						});
 
