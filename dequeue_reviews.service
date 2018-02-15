@@ -1,12 +1,10 @@
 [Unit]
-Description=Node.js App metadata crawler from RabbitMQ queue
+Description=Node.js App reviews crawler from RabbitMQ queue
 [Service]
 PIDFile=/tmp/dequeue_reviews.pid
-User=<Your Username>
-Group=<Your User Group>
 Restart=always
 KillSignal=SIGQUIT
-WorkingDirectory=/home/<username>/swag-crawler/
-ExecStart=/home/<username>/swag-crawler/dequeue_reviews.js
+WorkingDirectory=/swag-crawler/
+ExecStart=/swag-crawler/dequeue_reviews.js
 [Install]
 WantedBy=multi-user.target
