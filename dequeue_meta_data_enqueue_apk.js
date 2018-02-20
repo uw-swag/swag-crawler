@@ -44,6 +44,9 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 
 					console.log('Requesting from:' + usernames[index]);
 
+					var delay = Math.floor(Math.random() * ((8-4)+1) + 4); //random number between 4 & 8
+					delay = delay * 1000
+
 					var api = gplay.GooglePlayAPI({
 						username: usernames[index],
 						password: config.get('googlePassword'),
@@ -71,9 +74,9 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 								    if (!err)	console.log("inserted:" + body);
 								    else console.log("failed:" + body);
 
-								    acknowledgeToQ(msg, 4000, " [x] Done");
+								    acknowledgeToQ(msg, delay, " [x] Done");
 									});
-								} else acknowledgeToQ(msg, 4000, " [x] Done");
+								} else acknowledgeToQ(msg, delay, " [x] Done");
 							}
 							else {
 								collection.insert(json, function(err, result){
@@ -84,7 +87,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 							    }
 							    else console.log("failed:" + body);
 
-							    acknowledgeToQ(msg, 4000, " [x] Done");
+							    acknowledgeToQ(msg, delay, " [x] Done");
 								});
 							}
 						});
@@ -92,7 +95,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 						var not_ok = ch.assertQueue(failureQueue, {durable: true});
 						ch.sendToQueue(failureQueue, Buffer.from(body), {deliveryMode: true});
 						console.log(" [y] Sent '%s'", body);
-						acknowledgeToQ(msg, 4200, " [y] Failed");
+						acknowledgeToQ(msg, delay, " [y] Failed");
 					}); //end api details
 				} //end doWork()
 

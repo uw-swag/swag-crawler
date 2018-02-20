@@ -36,6 +36,10 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 
 			var usernames = config.get('usernames')
 			var index = Math.floor(Math.random() * usernames.length)
+
+			var delay = Math.floor(Math.random() * ((8-4)+1) + 4); //random number between 4 & 8
+			delay = delay * 1000
+
 			var api = gplay.GooglePlayAPI({
 				username: usernames[index],
 				password: config.get('googlePassword'),
@@ -57,7 +61,7 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 						res.pipe(myFile);
 
 						res.on('end', () => {
-							acknowledgeToQ(msg, 2000, "Finished downloading: " + body);
+							acknowledgeToQ(msg, delay, "Finished downloading: " + body);
 							myFile.end();
 						});
 
@@ -91,7 +95,7 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 				var not_ok = ch.assertQueue(apkFailureQueue, {durable: true});
 				var obj = { docid: body, versionCode: versionCode };
 				ch.sendToQueue(apkFailureQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true});
-				acknowledgeToQ(msg, 3500, "Failed: " + body);
+				acknowledgeToQ(msg, delay, "Failed: " + body);
 			}
 		}
 	}); //channel code end

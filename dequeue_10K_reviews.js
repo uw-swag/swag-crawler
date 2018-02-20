@@ -36,6 +36,9 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 
 					var doc = JSON.parse(body);
 
+					var delay = Math.floor(Math.random() * ((8-4)+1) + 4); //random number between 4 & 8
+					delay = delay * 1000
+
 					gplay.reviews({
 					  appId: doc.docid,
 					  page: doc.page,
@@ -51,7 +54,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 										if (!err) console.log('Found and updated:' + doc.docid);
 										else console.log("failed:" + doc.docid);
 
-										acknowledgeToQ(msg, 4000, " [x] Done");
+										acknowledgeToQ(msg, delay, " [x] Done");
 									});
 								} else if (result == null){
 									doc.reviews = data;
@@ -59,18 +62,18 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 										if (!err) console.log('inserted:' + doc.docid);
 										else console.log("failed:" + doc.docid);
 
-										acknowledgeToQ(msg, 4000, " [x] Done");
+										acknowledgeToQ(msg, delay, " [x] Done");
 									});
 								}
 							});
-						} else { acknowledgeToQ(msg, 4000, " [x] Done"); }
+						} else { acknowledgeToQ(msg, delay, " [x] Done"); }
 					}).catch((err) => {
 						var not_ok = ch.assertQueue(failureQueue, {durable: true});
 						// var obj = { docid: doc.docid, page: doc.page, totalComments: doc.aggregateRating.commentCount.low };
 					  ch.sendToQueue(failureQueue, Buffer.from(JSON.stringify(doc)), {deliveryMode: true});
 
 						console.log(" [y] Sent '%s'", doc.docid);
-						acknowledgeToQ(msg, 4200, " [y] Failed");
+						acknowledgeToQ(msg, delay, " [y] Failed");
 					}); //end gapi reviews api call
 				} //end doWork()
 
