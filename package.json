@@ -7,6 +7,7 @@
     "google-play-cli": "^4.5.0",
     "google-play-scraper": "^4.0.0",
     "gpapi": "^4.0.0",
+    "grepit": "^1.0.0",
     "mongodb": "^2.2.33",
     "shelljs": "0.8.0"
   }
