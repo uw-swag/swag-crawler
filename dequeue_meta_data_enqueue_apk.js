@@ -55,9 +55,12 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 						// downloadUserAgent: optional download agent override (see below)
 					});
 
+					// Might need to change the logic to first db query then api request for efficiency
+
 					api.details(body).then((data) => {
 						var json = JSON.stringify(data);
 	        	json = JSON.parse(json);
+	        	json.last_crawled_date = new Date();
 	        	// console.log(json);
 
 	        	//Update metadata if already exists in db otherwise insert
@@ -66,8 +69,14 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 								var result = results[results.length - 1] //latest(last inserted) document version
 								enqueueToReview(json);
 
+								var api_last_upload_date = new Date(json.details.appDetails.uploadDate);
+								var db_last_upload_date = new Date(result.details.appDetails.uploadDate);
+
+								api_last_upload_date.setHours(0,0,0,0);
+								db_last_upload_date.setHours(0,0,0,0);
+
 								//logic to update only if versionCode is large
-								if (json.details.appDetails.versionCode != result.details.appDetails.versionCode) {
+								if ((json.details.appDetails.versionCode != result.details.appDetails.versionCode) || (api_last_upload_date != db_last_upload_date)) {
 									enqueueToAPK(body, json.details.appDetails.versionCode);
 								
 									collection.insert(json, function(err, result){
