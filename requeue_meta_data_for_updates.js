@@ -18,19 +18,25 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 
 			//Logic is erroneous as redundant entries in db for same docid with different last_crawled_date -> will lead to reEnq everytime
 
-			if(doc.last_crawled_date) {
-				var last_crawled_date = new Date(doc.last_crawled_date);
-				console.log('contains last_crawled_date: '+ last_crawled_date);
-				last_crawled_date.setDate(last_crawled_date.getDate() + 7);
-				last_crawled_date.setHours(0,0,0,0);
+			collection.find({ docid: doc.docid }).toArray(function(err, results) { 
+				if(results.length > 0) {
+					var latest = results[results.length - 1] //latest(last crawled) document version
 
-				var today = new Date();
-				today.setHours(0,0,0,0);
+					if(latest.last_crawled_date) {
+						var last_crawled_date = new Date(latest.last_crawled_date);
+						console.log('contains last_crawled_date: '+ last_crawled_date);
+						last_crawled_date.setDate(last_crawled_date.getDate() + 7);
+						last_crawled_date.setHours(0,0,0,0);
 
-				if(last_crawled_date <= today) {
-					pushToTaskQ(doc.docid);
-				}				
-			} else pushToTaskQ(doc.docid);
+						var today = new Date();
+						today.setHours(0,0,0,0);
+
+						if(last_crawled_date <= today) {
+							pushToTaskQ(latest.docid);
+						}				
+					} else pushToTaskQ(latest.docid);
+				}
+			});
 		});
 
 		function pushToTaskQ(msg) {
