@@ -1,5 +1,5 @@
 [Unit]
-Description=Node.js App reviews crawler from RabbitMQ queue
+Description=Node.js App similar IDs crawler from RabbitMQ queue
 [Service]
 PIDFile=/tmp/find_new_app_ids.pid
 Restart=always
