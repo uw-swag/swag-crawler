@@ -20,12 +20,12 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 		
 		for(var i=0; i<25; i++) {
 			var randomIndex = Math.floor(Math.random() * (ids.length-1));
-			randomIds.push(ids[randomIndex])
+			if(ids[randomIndex] && ids[randomIndex].length) randomIds.push(ids[randomIndex])
 		}
 		reQueueSimilarApps(randomIds); // populate the queue with some initial 50 ids
 
 		// consuming from the same Queue
-		var ok = ch.assertQueue(similarAppsQueue, {durable: true, autoDelete: true, maxLength: 10000});
+		var ok = ch.assertQueue(similarAppsQueue, {durable: true, maxLength: 10000});
 		ok = ok.then(function() { ch.prefetch(1); });
 		ok = ok.then(function() {
 			ch.consume(similarAppsQueue, doWork, {noAck: false});
@@ -49,7 +49,10 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 
 					acknowledgeToQ(msg, delay, " [x] Done");
 				} else acknowledgeToQ(msg, delay, " [x] Done");
-			});
+			}).catch((err) => {
+				console.log('Error requesting Google');
+				console.log(err);
+			}); //end gplay similar api call
 		}
 
 		function checkAndEnQ(similarIds) {
@@ -75,7 +78,7 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 		} //end pushToTaskQ function
 
 		function reQueueSimilarApps(idArray) {
-			var ok = ch.assertQueue(similarAppsQueue, {durable: true, autoDelete: true, maxLength: 10000});
+			var ok = ch.assertQueue(similarAppsQueue, {durable: true, maxLength: 10000});
 			console.log('reQueing for similar apps Queue..');
 
 			return ok.then(function() {
