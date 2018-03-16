@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 var MongoClient = require('mongodb').MongoClient;
 var amqp = require('amqplib');
 var config = require('config')
