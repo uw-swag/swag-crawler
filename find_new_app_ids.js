@@ -52,6 +52,7 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 			}).catch((err) => {
 				console.log('Error requesting Google');
 				console.log(err);
+				acknowledgeToQ(msg, delay, " [x] failure Done");
 			}); //end gplay similar api call
 		}
 
