@@ -1,5 +1,5 @@
 [Unit]
-Description=Node.js App reviews crawler from RabbitMQ queue
+Description=Node.js App updates download crawler from RabbitMQ queue
 [Service]
 PIDFile=/tmp/requeue_meta_data_for_updates.pid
 Restart=always
