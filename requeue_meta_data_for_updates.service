@@ -1,0 +1,10 @@
+[Unit]
+Description=Node.js App reviews crawler from RabbitMQ queue
+[Service]
+PIDFile=/tmp/requeue_meta_data_for_updates.pid
+Restart=always
+KillSignal=SIGQUIT
+WorkingDirectory=/swag-crawler/
+ExecStart=/swag-crawler/requeue_meta_data_for_updates.js
+[Install]
+WantedBy=multi-user.target
