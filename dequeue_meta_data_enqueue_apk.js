@@ -45,6 +45,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 					console.log('Requesting from:' + usernames[index]);
 
 					var delay = Math.floor(Math.random() * ((8-4)+1) + 4); //random number between 4 & 8
+					delay = 4
 					delay = delay * 1000
 
 					var api = gplay.GooglePlayAPI({
