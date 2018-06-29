@@ -56,7 +56,10 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 			          return ch.close();
 				    });
 					});
-			  }).finally(function() { conn.close(); });
+			  }).finally(function() { 
+			  	console.log('done!')
+			  	conn.close(); 
+			  });
 			}).catch(console.warn);
 		} //end pushToTaskQ function
 	} else console.log(err);

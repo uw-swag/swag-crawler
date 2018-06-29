@@ -82,7 +82,10 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 								
 									collection.insert(json, function(err, result){
 								    if (!err)	console.log("inserted:" + body);
-								    else console.log("failed:" + body);
+								    else {
+								    	console.log("failed:" + body);
+								    	console.log(err)
+								    }
 
 								    acknowledgeToQ(msg, delay, " [x] Done");
 									});
@@ -95,7 +98,10 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 							    	enqueueToAPK(body, json.details.appDetails.versionCode);
 							    	enqueueToReview(json);
 							    }
-							    else console.log("failed:" + body);
+							    else {
+							    	console.log("failed:" + body);
+							    	console.log(err)
+							    }
 
 							    acknowledgeToQ(msg, delay, " [x] Done");
 								});
@@ -104,6 +110,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 					}).catch((err) => {
 						var not_ok = ch.assertQueue(failureQueue, {durable: true});
 						ch.sendToQueue(failureQueue, Buffer.from(body), {deliveryMode: true});
+						console.log(err)
 						console.log(" [y] Sent '%s'", body);
 						acknowledgeToQ(msg, delay, " [y] Failed");
 					}); //end api details

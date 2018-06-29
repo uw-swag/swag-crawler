@@ -53,7 +53,10 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 									result.reviews = result.reviews.concat(data);
 									reviewCollection.update({_id: result._id}, result, function(err, res) {
 										if (!err) console.log('Found and updated:' + doc.docid);
-										else console.log("failed:" + doc.docid);
+										else {
+											console.log("failed:" + doc.docid);
+											console.log(err)
+										}
 
 										acknowledgeToQ(msg, delay, " [x] Done");
 									});
@@ -61,7 +64,10 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 									doc.reviews = data;
 									reviewCollection.insert(doc, function(err, result) {
 										if (!err) console.log('inserted:' + doc.docid);
-										else console.log("failed:" + doc.docid);
+										else {
+											console.log("failed:" + doc.docid);
+											console.log(err)
+										}
 
 										acknowledgeToQ(msg, delay, " [x] Done");
 									});
@@ -73,6 +79,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 						// var obj = { docid: doc.docid, page: doc.page, totalComments: doc.aggregateRating.commentCount.low };
 					  ch.sendToQueue(failureQueue, Buffer.from(JSON.stringify(doc)), {deliveryMode: true});
 
+					  console.log(err)
 						console.log(" [y] Sent '%s'", doc.docid);
 						acknowledgeToQ(msg, delay, " [y] Failed");
 					}); //end gapi reviews api call
