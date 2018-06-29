@@ -59,7 +59,7 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 		function checkAndEnQ(similarIds) {
 			similarIds.forEach((id) => {
 				var result = grepit(id, filepath); //searches in the file
-				if(result.length == 0) { //newAppId found
+				if(result && result.length == 0) { //newAppId found
 					pushToTaskQ(id); //pushes to metadata queue
 					var writeStream = fs.createWriteStream(filepath, {'flags': 'a'});
 					writeStream.end('\n'+id); //adds entry to the file.txt

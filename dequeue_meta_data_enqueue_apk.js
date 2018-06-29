@@ -66,7 +66,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 
 	        	//Update metadata if already exists in db otherwise insert
 	        	collection.find({ docid: body }).toArray(function(err, results) {
-							if(results.length > 0) {
+							if(results && results.length > 0) {
 								var result = results[results.length - 1] //latest(last inserted) document version
 								enqueueToReview(json);
 
