@@ -38,6 +38,7 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 			console.log(docid);
 
 			var delay = Math.floor(Math.random() * ((15-5)+1) + 5); //random number between 5 & 15
+			delay = 1000
 			delay = delay * 1000
 
 			gplay.similar({appId: docid}).then((data) => {

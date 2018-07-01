@@ -37,7 +37,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 					var doc = JSON.parse(body);
 
 					var delay = Math.floor(Math.random() * ((8-4)+1) + 4); //random number between 4 & 8
-					delay = 4
+					delay = 15
 					delay = delay * 1000
 
 					gplay.reviews({
