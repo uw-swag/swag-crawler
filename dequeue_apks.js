@@ -38,7 +38,7 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 			var index = Math.floor(Math.random() * usernames.length)
 
 			var delay = Math.floor(Math.random() * ((8-4)+1) + 4); //random number between 4 & 8
-			delay = 9
+			delay = 7
 			delay = delay * 1000
 
 			var api = gplay.GooglePlayAPI({
