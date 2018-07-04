@@ -1,6 +1,5 @@
 // This should not be a service and should run only once in a week
 
-#!/usr/bin/env node
 var MongoClient = require('mongodb').MongoClient;
 var amqp = require('amqplib');
 var config = require('config')
