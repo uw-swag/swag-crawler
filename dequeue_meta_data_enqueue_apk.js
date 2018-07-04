@@ -132,7 +132,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 				}
 
 				function enqueueToReview(doc) {
-					console.log(doc);
+					//console.log(doc);
 					var reviews = ch.assertQueue(reviewQueue, {durable: true});
 
 					return reviews.then(function() {
