@@ -68,7 +68,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 	        	collection.find({ docid: body }).toArray(function(err, results) {
 							if(results && results.length > 0) {
 								var result = results[results.length - 1] //latest(last inserted) document version
-								// enqueueToReview(json);
+								enqueueToReview(json);
 
 								var api_last_upload_date = new Date(json.details.appDetails.uploadDate);
 								var db_last_upload_date = new Date(result.details.appDetails.uploadDate);
@@ -96,7 +96,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 							    if (!err) {
 							    	console.log("inserted:" + body);
 							    	enqueueToAPK(body, json.details.appDetails.versionCode);
-							    	// enqueueToReview(json);
+							    	enqueueToReview(json);
 							    }
 							    else {
 							    	console.log("failed:" + body);
@@ -131,38 +131,40 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 					});
 				}
 
-				// function enqueueToReview(doc) {
-      	// 	console.log(doc);
-				// 	var reviews = ch.assertQueue(reviewQueue, {durable: true});
-				// 	ch.assertQueue(reviews10KQueue, {durable: true});
+				function enqueueToReview(doc) {
+					console.log(doc);
+					var reviews = ch.assertQueue(reviewQueue, {durable: true});
 
-				// 	return reviews.then(function() {
-				// 		reviewCollection.findOne({ docid: doc.docid }, function(err, result) {
-				// 		  var newCommentsCount = doc.aggregateRating.commentCount.low;
-				// 		  console.log('Enq to review,')
-				// 		  console.log(newCommentsCount)
-				// 		  if(result != null) {
-				// 		  	var oldCommentsCount = result.totalComments;
-				// 		  	console.log(oldCommentsCount)
-				// 		  	if(newCommentsCount > oldCommentsCount) {
-				// 		  		newCommentsCount = newCommentsCount - oldCommentsCount;
-				// 		  	}
-				// 		  }
+					return reviews.then(function() {
+						reviewCollection.findOne({ docid: doc.docid }, function(err, result) {
+						  var newCommentsCount = doc.aggregateRating.commentCount.low;
+						  console.log('Enq to review,')
+						  console.log(newCommentsCount)
 
-				// 		  var pushToQueue = reviewQueue;
-				// 		  if(newCommentsCount > 10000) {
-				// 		  	pushToQueue = reviews10KQueue;
-				// 		  }
+						  if(result != null) {
+						  	var oldCommentsCount = result.totalComments;
+						  	console.log(oldCommentsCount)
+						  	if(newCommentsCount > oldCommentsCount) {
+						  		newCommentsCount = newCommentsCount - oldCommentsCount;
+						  	}
+						  }
 
-				// 		  var pages = Math.ceil( newCommentsCount / 40)
-				// 			for(var i=0; i < pages; i++) {
-				// 			  var obj = { docid: doc.docid, page: i, totalComments: doc.aggregateRating.commentCount.low };
-				// 			  ch.sendToQueue(pushToQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true});
-				// 			  console.log(" [a] Sent '%s'", doc.docid);
-				// 			}
-				// 		});
-				// 	});
-				// }
+						  var pushToQueue = reviewQueue;
+						  var limit = 7;
+
+						  var newPages = Math.ceil( newCommentsCount / 40)
+						  if (newPages < limit) {
+						  	limit = newPages;
+						  }
+						  // capture first five pages or new pages of review (make sure it is less than 5 pages all the time)
+							for(var i=0; i < limit; i++) {
+							  var obj = { docid: doc.docid, page: i, totalComments: doc.aggregateRating.commentCount.low };
+							  ch.sendToQueue(pushToQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true});
+							  console.log(" [a] Sent '%s'", doc.docid);
+							}
+						});
+					});
+				}
 			}); //channel code end
 		}).catch(console.warn); //end amqp 
 	} //end-if
