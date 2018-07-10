@@ -149,19 +149,21 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 						  	}
 						  }
 
-						  var pushToQueue = reviewQueue;
-						  var limit = 7;
+						  if(newCommentsCount && newCommentsCount != 0) {
+						  	var pushToQueue = reviewQueue;
+							  var limit = 7;
 
-						  var newPages = Math.ceil( newCommentsCount / 40)
-						  if (newPages < limit) {
-						  	limit = newPages;
+							  var newPages = Math.ceil( newCommentsCount / 40)
+							  if (newPages < limit) {
+							  	limit = newPages;
+							  }
+							  // capture first seven pages or new pages of review (making sure it is less than 7 pages all the time)
+								for(var i=0; i < limit; i++) {
+								  var obj = { docid: doc.docid, page: i, totalComments: doc.aggregateRating.commentCount.low };
+								  ch.sendToQueue(pushToQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true});
+								  console.log(" [a] Sent '%s'", doc.docid);
+								}
 						  }
-						  // capture first five pages or new pages of review (make sure it is less than 5 pages all the time)
-							for(var i=0; i < limit; i++) {
-							  var obj = { docid: doc.docid, page: i, totalComments: doc.aggregateRating.commentCount.low };
-							  ch.sendToQueue(pushToQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true});
-							  console.log(" [a] Sent '%s'", doc.docid);
-							}
 						});
 					});
 				}
