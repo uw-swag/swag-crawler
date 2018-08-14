@@ -49,7 +49,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 
 						if (data.length > 0) {
 							reviewCollection.findOne({ docid: doc.docid }, function(err, result) {
-								if(result != null) {
+								if(result && result != null) {
 									result.reviews = result.reviews.concat(data);
 									reviewCollection.update({_id: result._id}, result, function(err, res) {
 										if (!err) console.log('Found and updated:' + doc.docid);

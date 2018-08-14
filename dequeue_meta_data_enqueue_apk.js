@@ -56,46 +56,24 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 						// downloadUserAgent: optional download agent override (see below)
 					});
 
-					// Might need to change the logic to first db query then api request for efficiency
-
 					api.details(body).then((data) => {
 						var json = JSON.stringify(data);
 	        	json = JSON.parse(json);
 	        	json.last_crawled_date = new Date();
 	        	// console.log(json);
 
-	        	//Update metadata if already exists in db otherwise insert
-	        	collection.find({ docid: body }).toArray(function(err, results) {
-							if(results && results.length > 0) {
-								var result = results[results.length - 1] //latest(last inserted) document version
-								enqueueToReview(json);
+	        	let v_code = json.details.appDetails.versionCode
 
-								var api_last_upload_date = new Date(json.details.appDetails.uploadDate);
-								var db_last_upload_date = new Date(result.details.appDetails.uploadDate);
-
-								api_last_upload_date.setHours(0,0,0,0);
-								db_last_upload_date.setHours(0,0,0,0);
-
-								//logic to update only if versionCode is large
-								if ((json.details.appDetails.versionCode != result.details.appDetails.versionCode) || (api_last_upload_date != db_last_upload_date)) {
-									enqueueToAPK(body, json.details.appDetails.versionCode);
-								
-									collection.insert(json, function(err, result){
-								    if (!err)	console.log("inserted:" + body);
-								    else {
-								    	console.log("failed:" + body);
-								    	console.log(err)
-								    }
-
-								    acknowledgeToQ(msg, delay, " [x] Done");
-									});
-								} else acknowledgeToQ(msg, delay, " [x] Done");
+	        	//insert if not available
+	        	collection.findOne({ "docid": body, "details.appDetails.versionCode" : v_code }, function(err, result) {
+							if(result) {
+								acknowledgeToQ(msg, delay, "Already in db");
 							}
 							else {
 								collection.insert(json, function(err, result){
 							    if (!err) {
 							    	console.log("inserted:" + body);
-							    	enqueueToAPK(body, json.details.appDetails.versionCode);
+							    	enqueueToAPK(body, v_code);
 							    	enqueueToReview(json);
 							    }
 							    else {
