@@ -69,11 +69,11 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 		} //end checkAndEnQ function
 
 		function pushToTaskQ(msg) {
-			var ok = ch.assertQueue(taskQueue, {durable: true});
+			var ok = ch.assertQueue(taskQueue, {durable: true, maxPriority: 10});
 
 			return ok.then(function() {
 	        if (msg && msg.length) {
-            ch.sendToQueue(taskQueue, Buffer.from(msg), {deliveryMode: true});
+            ch.sendToQueue(taskQueue, Buffer.from(msg), {deliveryMode: true, priority: 10});
             console.log('new Id pushing to taskQueue: ' + msg);
           }
 	    });

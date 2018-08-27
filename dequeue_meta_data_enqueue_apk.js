@@ -26,7 +26,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 		amqp.connect(rabbitMQurl).then(function(conn) {
 			process.once('SIGINT', function() { conn.close(); });
 			return conn.createChannel().then(function(ch) {
-				var ok = ch.assertQueue(taskQueue, {durable: true});
+				var ok = ch.assertQueue(taskQueue, {durable: true, maxPriority: 10});
 
 				ok = ok.then(function() { ch.prefetch(1); });
 				ok = ok.then(function() {
@@ -36,7 +36,9 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 				return ok;
 
 				function doWork(msg) {
+					var priority = msg.properties.priority;
 					var body = msg.content.toString();
+					console.log("Message priority:" + priority);
 					console.log(" [x] Received '%s'", body);
 
 					var usernames = config.get('usernames');
@@ -73,8 +75,8 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 								collection.insert(json, function(err, result){
 							    if (!err) {
 							    	console.log("inserted:" + body);
-							    	enqueueToAPK(body, v_code);
-							    	enqueueToReview(json);
+							    	enqueueToAPK(body, v_code, priority);
+							    	enqueueToReview(json, priority);
 							    }
 							    else {
 							    	console.log("failed:" + body);
@@ -86,8 +88,8 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 							}
 						});
 					}).catch((err) => {
-						var not_ok = ch.assertQueue(failureQueue, {durable: true});
-						ch.sendToQueue(failureQueue, Buffer.from(body), {deliveryMode: true});
+						var not_ok = ch.assertQueue(failureQueue, {durable: true, maxPriority: 10});
+						ch.sendToQueue(failureQueue, Buffer.from(body), {deliveryMode: true, priority: 1});
 						console.log(err)
 						console.log(" [y] Sent '%s'", body);
 						acknowledgeToQ(msg, delay, " [y] Failed");
@@ -101,17 +103,17 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 					}, time);
 				}
 
-				function enqueueToAPK(body, versionCode) {
-					var apk = ch.assertQueue(apkTaskQueue, {durable: true});
+				function enqueueToAPK(body, versionCode, importance) {
+					var apk = ch.assertQueue(apkTaskQueue, {durable: true, maxPriority: 10});
 					var obj = { docid: body, versionCode: versionCode };
 					return apk.then(function() {
-						ch.sendToQueue(apkTaskQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true});
+						ch.sendToQueue(apkTaskQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true, priority: importance});
 					});
 				}
 
-				function enqueueToReview(doc) {
+				function enqueueToReview(doc, importance) {
 					//console.log(doc);
-					var reviews = ch.assertQueue(reviewQueue, {durable: true});
+					var reviews = ch.assertQueue(reviewQueue, {durable: true, maxPriority: 10});
 
 					return reviews.then(function() {
 						reviewCollection.findOne({ docid: doc.docid }, function(err, result) {
@@ -138,7 +140,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 							  // capture first seven pages or new pages of review (making sure it is less than 7 pages all the time)
 								for(var i=0; i < limit; i++) {
 								  var obj = { docid: doc.docid, page: i, totalComments: doc.aggregateRating.commentCount.low };
-								  ch.sendToQueue(pushToQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true});
+								  ch.sendToQueue(pushToQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true, priority: importance});
 								  console.log(" [a] Sent '%s'", doc.docid);
 								}
 						  }

@@ -22,7 +22,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 			process.once('SIGINT', function() { conn.close(); });
 
 			return conn.createChannel().then(function(ch) {
-				var ok = ch.assertQueue(reviewQueue, {durable: true});
+				var ok = ch.assertQueue(reviewQueue, {durable: true, maxPriority: 10});
 				ok = ok.then(function() { ch.prefetch(1); });
 				ok = ok.then(function() {
 					ch.consume(reviewQueue, doWork, {noAck: false});
@@ -75,9 +75,9 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 							});
 						} else { acknowledgeToQ(msg, delay, " [x] Done"); }
 					}).catch((err) => {
-						var not_ok = ch.assertQueue(failureQueue, {durable: true});
+						var not_ok = ch.assertQueue(failureQueue, {durable: true, maxPriority: 10});
 						// var obj = { docid: doc.docid, page: doc.page, totalComments: doc.aggregateRating.commentCount.low };
-					  ch.sendToQueue(failureQueue, Buffer.from(JSON.stringify(doc)), {deliveryMode: true});
+					  ch.sendToQueue(failureQueue, Buffer.from(JSON.stringify(doc)), {deliveryMode: true, priority: 1});
 
 					  console.log(err)
 						console.log(" [y] Sent '%s'", doc.docid);

@@ -19,13 +19,13 @@ var ids = contents.split("\n");
 
 amqp.connect(rabbitMQurl).then(function(conn) {
   return conn.createChannel().then(function(ch) {
-    var ok = ch.assertQueue(taskQueue, {durable: true});
+    var ok = ch.assertQueue(taskQueue, {durable: true, maxPriority: 10});
     // ok = ch.assertQueue(apkTaskQueue, {durable: true});
 
     return ok.then(function() {
         ids.forEach((msg) => {
             if (msg && msg.length) {
-                ch.sendToQueue(taskQueue, Buffer.from(msg), {deliveryMode: true});
+                ch.sendToQueue(taskQueue, Buffer.from(msg), {deliveryMode: true, priority: 1});
                 // ch.sendToQueue(apkTaskQueue, Buffer.from(msg), {deliveryMode: true});
                 console.log(" [x] Sent '%s'", msg);
             }

@@ -14,7 +14,7 @@ var filePath = config.get('filePathToStoreAPKs')
 amqp.connect(rabbitMQurl).then(function(conn) {
 	process.once('SIGINT', function() { conn.close(); });
 	return conn.createChannel().then(function(ch) {
-		var ok = ch.assertQueue(apkTaskQueue, {durable: true});
+		var ok = ch.assertQueue(apkTaskQueue, {durable: true, maxPriority: 10});
 		ok = ok.then(function() { ch.prefetch(1); });
 		ok = ok.then(function() {
 			ch.consume(apkTaskQueue, doWork, {noAck: false});
@@ -93,9 +93,9 @@ amqp.connect(rabbitMQurl).then(function(conn) {
 			}
 
 			function errHandle(body, versionCode) {
-				var not_ok = ch.assertQueue(apkFailureQueue, {durable: true});
+				var not_ok = ch.assertQueue(apkFailureQueue, {durable: true, maxPriority: 10});
 				var obj = { docid: body, versionCode: versionCode };
-				ch.sendToQueue(apkFailureQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true});
+				ch.sendToQueue(apkFailureQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true, priority: 1});
 				acknowledgeToQ(msg, delay, "Failed: " + body);
 			}
 		}

@@ -26,12 +26,12 @@ MongoClient.connect(mongoDBurl, function(err, db) {
       
       amqp.connect(rabbitMQurl).then(function(conn) {
         return conn.createChannel().then(function(ch) {
-          var ok = ch.assertQueue(taskQueue, {durable: true});
+          var ok = ch.assertQueue(taskQueue, {durable: true, maxPriority: 10});
 
           return ok.then(function() {
             result.forEach((doc) => {
             	var obj = { docid: doc.docid, versionCode: doc.details.appDetails.versionCode };
-                ch.sendToQueue(taskQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true});
+                // ch.sendToQueue(taskQueue, Buffer.from(JSON.stringify(obj)), {deliveryMode: true, priority: 1});
                 console.log(" [x] Sent '%s'", doc.docid);
             });
             return ch.close();

@@ -44,14 +44,14 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 		function pushToTaskQ(msg) {
 			amqp.connect(rabbitMQurl).then(function(conn) {
 			  return conn.createChannel().then(function(ch) {
-			    var ok = ch.assertQueue(taskQueue, {durable: true});
+			    var ok = ch.assertQueue(taskQueue, {durable: true, maxPriority: 10});
 
 			    return ok.then(function() {
-						var ok = ch.assertQueue(taskQueue, {durable: true});
+						var ok = ch.assertQueue(taskQueue, {durable: true, maxPriority: 10});
 
 						return ok.then(function() {
 				        if (msg && msg.length) {
-			            ch.sendToQueue(taskQueue, Buffer.from(msg), {deliveryMode: true});
+			            ch.sendToQueue(taskQueue, Buffer.from(msg), {deliveryMode: true, priority: 1});
 			            console.log('pushing Id to taskQueue for update: ' + msg);
 			          }
 			          return ch.close();
