@@ -1,0 +1,10 @@
+[Unit]
+Description=Node.js App category crawler from RabbitMQ queue
+[Service]
+PIDFile=/tmp/genre_app_category.pid
+Restart=always
+KillSignal=SIGQUIT
+WorkingDirectory=/swag-crawler/
+ExecStart=/swag-crawler/genre_app_category.js
+[Install]
+WantedBy=multi-user.target
