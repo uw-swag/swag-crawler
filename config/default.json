@@ -11,6 +11,9 @@
 	"reviews10KQueueName": "review_10K_queue",
 	"reviewsFailure10KQueueName": "review_failure_10K_ids",
 
+	"genreQueue": "genre_queue",
+	"genreFailureQueueName": "genre_failure_queue",
+
 	"similarAppsQueueName": "find_similar_apps",
 
 	"rabbitMQurl": "amqp://localhost",
@@ -18,6 +21,7 @@
 	"mongoDBurl": "mongodb://localhost:27017/gapi",
 	"mongoCollectionName": "app_details",
 	"reviewCollectionName": "app_reviews",
+	"genreCollection": "app_category",
 
 	"filePathToAppIds": "/swag-crawler/list.txt",
 	"filePathToStoreAPKs": "/path/to/storage/",
