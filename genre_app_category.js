@@ -47,7 +47,7 @@ MongoClient.connect(mongoDBurl, function(err, db) {
 	        	// console.log(json);
 
 	        	//insert if not available
-	        	collection.findOne({ "docid": body}, function(err, result) {
+	        	collection.findOne({ "appId": body}, function(err, result) {
 							if(result) {
 								acknowledgeToQ(msg, delay, "Already in db");
 							}
