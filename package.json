@@ -9,6 +9,12 @@
     "gpapi": "^4.4.1-0",
     "grepit": "^1.0.0",
     "mongodb": "^2.2.33",
-    "shelljs": "0.8.0"
-  }
+    "shelljs": "0.8.0",
+    "snyk": "^1.189.0"
+  },
+  "scripts": {
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
+  },
+  "snyk": true
 }
